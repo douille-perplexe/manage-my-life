@@ -43,6 +43,7 @@ export interface Task {
   assignee?: User;
   comments?: Comment[];
   attachments?: Attachment[];
+  points?: number;
 }
 
 export enum Status {
