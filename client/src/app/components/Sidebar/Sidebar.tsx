@@ -22,10 +22,13 @@ import {
 import SidebarLink from "@/app/components/Sidebar/SidebarLink";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsSidebarCollapsed } from "@/state/state";
+import {useGetProjectsQuery} from "@/state/api";
 
 const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
+
+  const {data : projects } = useGetProjectsQuery();
 
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector(
@@ -91,6 +94,11 @@ const Sidebar = () => {
             <ChevronDown className={"h-5 w-5"} />
           )}
         </button>
+
+
+        {showProjects && projects?.map((project) =>(
+          <SidebarLink key={project.id} href={`/projects/${project.id}`} icon={Briefcase} label={project.name} />
+        ))}
 
         <button
           onClick={() => setShowPriority((prev) => !prev)}
