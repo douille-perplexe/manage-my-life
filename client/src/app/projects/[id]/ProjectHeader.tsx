@@ -1,6 +1,8 @@
 import { useState } from "react";
 import TabButton from "@/app/projects/[id]/TabButton";
 import { Clock, Grid3X3, List, Share2, Table } from "lucide-react";
+import Header from "@/app/components/Header";
+
 
 interface ProjectHeaderProps {
   activeTab: string;
