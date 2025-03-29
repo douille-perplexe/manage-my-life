@@ -61,8 +61,26 @@ export enum Priority {
   Backlog = "Backlog",
 }
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "/api/";
+const baseUrl = apiBaseUrl.endsWith("/") ? apiBaseUrl : `${apiBaseUrl}/`;
+
 export const api = createApi({
-  baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL }),
+  baseQuery: fetchBaseQuery({
+    baseUrl,
+    responseHandler: async (response) => {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        return response.json().catch((error) => {
+          console.error("JSON parsing error:", error);
+          throw new Error("Response is not a valid JSON");
+        });
+      }
+
+      const text = await response.text();
+      console.error("Non-JSON response received:", text.substring(0, 500));
+      throw new Error(`Unexpected response format (${contentType})`);
+    },
+  }),
   reducerPath: "api",
   tagTypes: ["Projects", "Tasks"],
   endpoints: (build) => ({
@@ -79,7 +97,15 @@ export const api = createApi({
       invalidatesTags: ["Projects"],
     }),
     getTasks: build.query<Task[], { projectId: number }>({
-      query: ({ projectId }) => `tasks?projectId=${projectId}`,
+      query: ({ projectId }) => {
+        if (!projectId || isNaN(Number(projectId))) {
+          throw new Error("Invalid project ID");
+        }
+        return `tasks?projectId=${projectId}`;
+      },
+      transformResponse: (response: Task[] | null) => {
+        return response || [];
+      },
       providesTags: (result) =>
         result
           ? result.map(({ id }) => ({
